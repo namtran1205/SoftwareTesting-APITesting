@@ -1,0 +1,7 @@
+email,password,expected_status,error
+customer@practicesoftwaretesting.com,welcome01,200,Login successful
+invalid@example.com,welcome01,401,Unauthorized
+customer@practicesoftwaretesting.com,wrongpass,401,Unauthorized
+, welcome01,400,Missing email
+customer@practicesoftwaretesting.com,,400,Missing password
+customer@example.com' OR '1'='1,welcome01,401,Unauthorized

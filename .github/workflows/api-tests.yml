@@ -27,12 +27,12 @@ jobs:
 
       # 4. Chạy API tests cho login
       - name: Run Login API tests
-        run: newman run Testing.postman_collection.json --folder "Login"  --iteration-data users_data.csv
+        run: newman run Testing.postman_collection.json -e Testing.postman_environment.json --folder "Login"  --iteration-data users_data.csv
 
       # 5. Chạy API tests cho checkout
       - name: Run Invoice API tests
-        run: newman run Testing.postman_collection.json --folder "Create Invoice"  --iteration-data users_data.csv                        PITesting>
+        run: newman run Testing.postman_collection.json -e Testing.postman_environment.json --folder "Create Invoice"  --iteration-data users_data.csv
 
       # 6. Chạy API tests cho brand
       - name: Run Brand API tests
-        run: newman run Testing.postman_collection.json --folder "Put Brands"  --iteration-data brand_update.csv
+        run: newman run Testing.postman_collection.json -e Testing.postman_environment.json --folder "Put Brands"  --iteration-data brand_update.csv

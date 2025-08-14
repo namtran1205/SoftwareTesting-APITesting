@@ -1,0 +1,332 @@
+{
+	"info": {
+		"_postman_id": "5629cfdb-eefb-49c7-8f1b-edae1a63ee79",
+		"name": "Testing",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "40201913"
+	},
+	"item": [
+		{
+			"name": "Login",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"let actualStatus = pm.response.code;\r",
+							"let expectedStatus = parseInt(pm.iterationData.get(\"expected_status\"));\r",
+							"let expectedError = pm.iterationData.get(\"error\");\r",
+							"\r",
+							"// Check status code first\r",
+							"pm.test(\"Status code matches expected_status\", function () {\r",
+							"    pm.expect(actualStatus).to.eql(expectedStatus);\r",
+							"});\r",
+							"\r",
+							"// If status code is not as expected → stop further tests\r",
+							"if (actualStatus !== expectedStatus) {\r",
+							"    console.error(`❌ Expected status ${expectedStatus} but got ${actualStatus}. Stopping further checks.`);\r",
+							"    return; // stops running the rest of the script\r",
+							"}\r",
+							"\r",
+							"// Continue normal checks\r",
+							"if (actualStatus === 200) {\r",
+							"    pm.test(\"Response contains access_token\", function () {\r",
+							"        pm.expect(pm.response.json()).to.have.property(\"access_token\");\r",
+							"        //lưu lại token\r",
+							"        pm.environment.set(\"token\", pm.response.json().access_token);\r",
+							"    });\r",
+							"} else {\r",
+							"    pm.test(\"No access_token when login fails\", function () {\r",
+							"        pm.expect(pm.response.json()).to.not.have.property(\"access_token\");\r",
+							"    });\r",
+							"\r",
+							"    pm.test(\"Error message matches CSV 'error' column\", function () {\r",
+							"        pm.expect(pm.response.text()).to.include(expectedError);\r",
+							"    });\r",
+							"}\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"email\" : \"{{email}}\",\r\n    \"password\" : \"{{password}}\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/users/login",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"users",
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create Invoice",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Get variables from CSV\r",
+							"let expectedStatus = parseInt(pm.iterationData.get(\"expected_status\"), 10);\r",
+							"let expectedError = pm.iterationData.get(\"error\") || \"\";\r",
+							"\r",
+							"// Check status code\r",
+							"pm.test(\"Status code matches expected\", function () {\r",
+							"    pm.expect(pm.response.code).to.eql(expectedStatus);\r",
+							"});\r",
+							"\r",
+							"// Stop here if status is not what we expect\r",
+							"if (pm.response.code !== expectedStatus) {\r",
+							"    console.error(`❌ Status mismatch. Expected: ${expectedStatus}, Got: ${pm.response.code}`);\r",
+							"    postman.setNextRequest(null); // Stop the run\r",
+							"    return;\r",
+							"}\r",
+							"\r",
+							"// If status is not 200, check error message\r",
+							"if (expectedStatus !== 200) {\r",
+							"    let jsonData = pm.response.json();\r",
+							"    let found = false;\r",
+							"    for (let key in jsonData) {\r",
+							"        if (jsonData[key].includes(expectedError)) {\r",
+							"            found = true;\r",
+							"            break;\r",
+							"        }\r",
+							"    }\r",
+							"    pm.test(`Validation error contains: \"${expectedError}\"`, function () {\r",
+							"        pm.expect(found).to.be.true;\r",
+							"    });\r",
+							"} else {\r",
+							"    pm.test(\"Successful response has no error\", function () {\r",
+							"        let resBody = pm.response.json();\r",
+							"        pm.expect(resBody).to.be.an(\"object\");\r",
+							"        pm.expect(resBody).to.not.have.property(\"error\");\r",
+							"    });\r",
+							"}\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"if (!pm.environment.get(\"token\")) {\r",
+							"    pm.sendRequest({\r",
+							"        url: 'http://localhost:8091/users/login',\r",
+							"        method: 'POST',\r",
+							"        header: { 'Content-Type': 'application/json' },\r",
+							"        body: {\r",
+							"            mode: 'raw',\r",
+							"            raw: JSON.stringify({\r",
+							"                email: \"customer@practicesoftwaretesting.com\",\r",
+							"                password: \"welcome01\"\r",
+							"            })\r",
+							"        }\r",
+							"    }, function (err, res) {\r",
+							"        if (!err && res.code === 200) {\r",
+							"            let token = res.json().access_token;\r",
+							"            pm.environment.set(\"token\", token);\r",
+							"        }\r",
+							"    });\r",
+							"}\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"user_id\": {{user_id}},\r\n  \"billing_address\": \"{{billing_address}}\",\r\n  \"billing_city\": \"{{billing_city}}\",\r\n  \"billing_country\": \"{{billing_country}}\",\r\n  \"billing_state\": \"{{billing_state}}\",\r\n  \"billing_postcode\": \"{{billing_postcode}}\",\r\n  \"total\": {{total}},\r\n  \"payment_method\": \"{{payment_method}}\",\r\n  \"payment_account_name\": \"{{payment_account_name}}\",\r\n  \"payment_account_number\": \"{{payment_account_number}}\",\r\n  \"invoice_items\": [\r\n    {\r\n      \"product_id\": {{product_id}},\r\n      \"quantity\": {{quantity}},\r\n      \"unit_price\": {{unit_price}}\r\n    }\r\n  ]\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/invoices",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"invoices"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Put Brands",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Lấy data từ CSV\r",
+							"let expectedStatus = parseInt(pm.iterationData.get(\"expected_status\"), 10);\r",
+							"let expectedError = pm.iterationData.get(\"error\");\r",
+							"\r",
+							"// Kiểm tra status code\r",
+							"pm.test(\"Status code matches expected\", function () {\r",
+							"    pm.expect(pm.response.code).to.eql(expectedStatus, `Expected status ${expectedStatus} but got ${pm.response.code}`);\r",
+							"});\r",
+							"\r",
+							"// Nếu sai status code thì dừng luôn\r",
+							"if (pm.response.code !== expectedStatus) {\r",
+							"    pm.expect.fail(`Status code mismatch. Expected ${expectedStatus}, got ${pm.response.code}`);\r",
+							"}\r",
+							"\r",
+							"// Nếu có expectedError thì kiểm tra message trong body\r",
+							"if (expectedError && expectedError.trim() !== \"\") {\r",
+							"    let jsonData;\r",
+							"    try {\r",
+							"        jsonData = pm.response.json();\r",
+							"    } catch (e) {\r",
+							"        pm.expect.fail(\"Response is not valid JSON\");\r",
+							"    }\r",
+							"\r",
+							"    // Convert JSON thành string để search\r",
+							"    let jsonString = JSON.stringify(jsonData);\r",
+							"\r",
+							"    pm.test(\"Error message matches expected\", function () {\r",
+							"        pm.expect(jsonString).to.include(expectedError, `Expected error message to include: \"${expectedError}\"`);\r",
+							"    });\r",
+							"} else {\r",
+							"    pm.test(\"No error expected\", function () {\r",
+							"        pm.expect(pm.response.code).to.eql(expectedStatus);\r",
+							"    });\r",
+							"}\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"id\": {{id}},\r\n    \"name\": \"{{name}}\",\r\n    \"slug\": \"{{slug}}\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/brands/{{id}}",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"brands",
+						"{{id}}"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "{{baseUrl}}",
+			"type": "string"
+		},
+		{
+			"key": "email",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "password",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": ""
+		}
+	]
+}

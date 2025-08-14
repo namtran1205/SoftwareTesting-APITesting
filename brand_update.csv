@@ -1,0 +1,8 @@
+id,name,slug,expected_status,error
+2,Updated Brand Name,updated-brand-name,200,
+3,New Brand,new-brand,404,Brand not found
+abc,Test Brand,test-brand,422,Invalid brand id
+2,,updated-slug,422,The name field must be a string.
+2,Brand Name With @$%!,valid-slug,200,
+2,Valid Brand,,422,The slug field must be a string.
+' OR '1'='1,SQL Injection,sql-injection,500,Something went wrong

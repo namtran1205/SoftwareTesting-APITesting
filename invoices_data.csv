@@ -1,0 +1,7 @@
+user_id,billing_address,billing_city,billing_country,billing_state,billing_postcode,total,payment_method,payment_account_name,payment_account_number,product_id,quantity,unit_price,expected_status,error
+1,123 Main St,New York,USA,NY,12345,100,Credit Card,John Doe,1.23E+15,9,1,12.01,201,
+1,,New York,USA,NY,12345,100,Credit Card,John Doe,1.23E+15,9,1,12.01,422,The billing address field is required.
+1,123 Main St,New York,,NY,12345,100,Credit Card,John Doe,1.23E+15,9,1,12.01,422,The billing country field is required.
+1,123 Main St,New York,USA,NY,12345,100,Credit Card,John Doe,1234567890123456d,9,1,12.01,422,Invalid account number
+1,123 Main St,New York,USA,NY,12345,100,Credit Card,Maximilian Christopher Alexander Feather,1.23E+15,9,1,12.01,201,
+1,124 Main St,New York,USA,NY,12345,100,Credit Card,Maximilian Christopher Alexander Feathers,1.23E+15,9,1,12.01,422,Account name too long
