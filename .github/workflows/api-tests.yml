@@ -1,0 +1,38 @@
+name: API Tests
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  run-api-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Lấy code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Cài Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      # 3. Cài newman
+      - name: Install Newman
+        run: npm install -g newman
+
+      # 4. Chạy API tests cho login
+      - name: Run Login API tests
+        run: newman run Testing.postman_collection.json --folder "Login"  --iteration-data users_data.csv
+
+      # 5. Chạy API tests cho checkout
+      - name: Run Invoice API tests
+        run: newman run Testing.postman_collection.json --folder "Create Invoice"  --iteration-data users_data.csv                        PITesting>
+
+      # 6. Chạy API tests cho brand
+      - name: Run Brand API tests
+        run: newman run Testing.postman_collection.json --folder "Put Brands"  --iteration-data brand_update.csv
